@@ -14,7 +14,7 @@ library(dplyr)
 ####################################################
 sp <- "SAB"
 load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAI.rdata")
-source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/11_fun_model.r")
+source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 data <- prepare_mod_data(sp = sp)
 
 # mise en forme tel que lmer/lm le fait (permet de prendre en compte les facteurs --> 0/1)

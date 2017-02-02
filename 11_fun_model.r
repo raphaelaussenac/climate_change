@@ -9,6 +9,7 @@ prepare_mod_data <- function(sp=sp){
   ####################################################
   meas <- data
   meas$ID_PET_MES <- as.factor(meas$ID_PET_MES)
+  meas$ID_ARB <- as.factor(meas$ID_ARB)
   meas$DD <- as.factor(meas$DD)
 
   ####################################################
@@ -108,6 +109,7 @@ prepare_mod_data_futur <- function(sp=sp){
   ####################################################
   meas <- data
   meas$ID_PET_MES <- as.factor(meas$ID_PET_MES)
+  meas$ID_ARB <- as.factor(meas$ID_ARB)
 
   ####################################################
   ## Select Species
@@ -267,10 +269,10 @@ run_mod_fin <- function(speed = c("rapid", "lent"), sp = c("PET", "SAB")){
   }
 
   if (speed == "rapid"){
-    mod <-  lmer(form, data=data, REML = FALSE, control = lmerControl(optimizer = "bobyqa", calc.derivs = FALSE, optCtrl = list(maxfun = 500)))
+    mod <- lmer(form, data = data, REML = FALSE, control = lmerControl(optimizer = "bobyqa", calc.derivs = FALSE, optCtrl = list(maxfun = 500)))
   } else if (speed == "lent"){
     # mod <-  lmer(form, data=data, REML = FALSE)
-    mod <-  lmer(form, data=data, REML = FALSE, control = lmerControl(optimizer = "bobyqa", calc.derivs = FALSE))
+    mod <- lmer(form, data = data, REML = FALSE, control = lmerControl(optimizer = "bobyqa", calc.derivs = FALSE))
   }
   return(mod)
 }

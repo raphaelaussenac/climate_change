@@ -5,7 +5,7 @@ rm(list=ls(all=TRUE))
 ## Model PET
 ####################################################
 load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAI.rdata")
-source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/11_fun_model.r")
+source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 sp <- "PET"
 data <- prepare_mod_data(sp = sp)
 speed <- "lent" # rapid/lent
@@ -21,10 +21,9 @@ if (speed=="rapid"){
 ## Model SAB
 ####################################################
 load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAI.rdata")
-source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/11_fun_model.r")
+source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 sp <- "SAB"
 data <- prepare_mod_data(sp = sp)
-
 speed <- "lent" # rapid/lent
 
 mod <- run_mod_fin(speed = speed, sp = sp)
