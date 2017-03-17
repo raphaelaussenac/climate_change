@@ -98,7 +98,7 @@ prepare_mod_data <- function(sp=sp){
 
 
 
-prepare_mod_data_futur <- function(sp=sp){
+prepare_mod_data_futur <- function(data = data, sp=sp){
   ####################################################
   ## Packages
   ####################################################

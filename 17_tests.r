@@ -15,6 +15,15 @@ SAB <- predictions
 SAB$sp <- "SAB"
 data <- rbind(PET, SAB)
 
+
+# nombre de sites PET/SAB/MIX
+length(unique(data$ID_PET_MES))
+nb_plot_mix <- length(unique(data[data$prop_PET_BA < 0.75 & data$prop_SAB_BA < 0.75, "ID_PET_MES"]))
+nb_plot_pet <- length(unique(data[data$prop_PET_BA >= 0.75 , "ID_PET_MES"]))
+nb_plot_sab <- length(unique(data[data$prop_SAB_BA >= 0.75, "ID_PET_MES"]))
+
+
+
 predict <- function(data = data){
   # prediction at the QC scale
   tab <- data.frame(yr = NA, rcpmod = NA, BAI = NA, sim = NA)
@@ -99,6 +108,57 @@ summary(lm(BAI ~ period, data = predrcp85PET))
 predrcp85SAB <- predrcp85[predrcp85$plot == "SAB", ]
 summary(lm(BAI ~ period, data = predrcp85SAB))
 
+
+
+####################################################
+# TS plot
+####################################################
+
+TSplot <- function(plot = c("mix", "PET", "SAB"), period = "p1", rcp = "rcp45"){
+  if (plot == "mix"){
+    if (rcp == "rcp45"){
+      pred <- predrcp45mix
+    } else if (rcp == "rcp85"){
+      pred <- predrcp85mix
+    }
+  } else if (plot == "PET"){
+    if (rcp == "rcp45"){
+      pred <- predrcp45PET
+    } else if (rcp == "rcp85"){
+      pred <- predrcp85PET
+    }
+  } else if (plot == "SAB"){
+    if (rcp == "rcp45"){
+      pred <- predrcp45SAB
+    } else if (rcp == "rcp85"){
+      pred <- predrcp85SAB
+    }
+  }
+
+  TS <- mean(pred[pred$period == period, "BAI"]) / var(pred[pred$period == period, "BAI"])
+  a <- data.frame(plot = plot, period = period, rcp = rcp, TS = TS)
+  return(a)
+}
+
+
+
+b <- data.frame(plot = NA, period = NA, rcp = NA, TS = NA)
+for (i in c("mix", "PET", "SAB")){
+  for (j in c("p1", "p2")){
+    for (k in c("rcp45", "rcp85")){
+
+      a <- TSplot(plot = i, period = j, rcp = k)
+      b <- rbind(b, a)
+
+    }
+  }
+}
+
+b <- b[-1,]
+
+ggplot(b)+
+geom_point(aes(period, TS, color = plot))+
+facet_wrap(~ rcp, , scales="free")
 
 
 # ####################################################
@@ -248,49 +308,150 @@ abircp85 <- abircp85[abircp85$sp == "SAB",]
 summary(lm(BAI ~ period + period:plot, data = abircp85))
 
 
-
-
-
-
-
-
 ####################################################
 # Tests var(PET + SAB) = var(MIX)
 ####################################################
 
-# var peuplemets mixtes
-varmixobs <- var(predrcp45[predrcp45$period == "p1" & predrcp45$plot == "mix", "BAI"])
-varmixobs
+TS <- function(period = "p1", rcp = "rcp45", psab = 0.5, ppet = 0.5){
+  if (rcp == "rcp45"){
+    p <- predrcp45
+    po <- poprcp45
+    ab <- abircp45
+  } else if (rcp == "rcp85"){
+    p <- predrcp85
+    po <- poprcp85
+    ab <- abircp85
+  }
 
-# var mix théorique (déduite des mix)
-varmixtheomix <- var(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mix", "BAI"]) + var(abircp45[abircp45$period == "p1" & abircp45$plot == "mix", "BAI"]) + 2 * cov(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mix", "BAI"], abircp45[abircp45$period == "p1" & abircp45$plot == "mix", "BAI"])
-varmixtheomix
+  psabmix <- (psab/nb_plot_mix)
+  ppetmix <- (ppet/nb_plot_mix)
 
-# var mix théorique (déduite des mono)
-varmixtheomono <- var(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mono", "BAI"]) + var(abircp45[abircp45$period == "p1" & abircp45$plot == "mono", "BAI"]) + 2 * cov(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mono", "BAI"], abircp45[abircp45$period == "p1" & abircp45$plot == "mono", "BAI"])
-varmixtheomono
-
-
-
-
-
-meanmixobs <- mean(predrcp45[predrcp45$period == "p1" & predrcp45$plot == "mix", "BAI"])
-meanmixobs
-
-meanmixtheomix <- mean(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mix", "BAI"]) + mean(abircp45[abircp45$period == "p1" & abircp45$plot == "mix", "BAI"])
-meanmixtheomix
-
-meanmixtheomono <- mean(poprcp45[poprcp45$period == "p1" & poprcp45$plot == "mono", "BAI"]) + mean(abircp45[abircp45$period == "p1" & abircp45$plot == "mono", "BAI"])
-meanmixtheomono
+  psab <- psab/nb_plot_sab
+  ppet <- ppet/nb_plot_pet
 
 
+  # var peuplemets mixtes
+  varmixobs <- var(p[p$period == period & p$plot == "mix", "BAI"]) / nb_plot_mix
+
+  # var mix théorique (déduite des mix)
+  varmixtheomix <- (ppetmix^2 * var(po[po$period == period & po$plot == "mix", "BAI"])) + (psabmix^2 * var(ab[ab$period == period & ab$plot == "mix", "BAI"])) + (2 * ppetmix * psabmix * cov(po[po$period == period & po$plot == "mix", "BAI"], ab[ab$period == period & ab$plot == "mix", "BAI"]))
+
+  # var mix théorique (déduite des mono)
+  varmixtheomono <- (ppet^2 * var(po[po$period == period & po$plot == "mono", "BAI"])) + (psab^2 * var(ab[ab$period == period & ab$plot == "mono", "BAI"])) + (2 * ppet * psab * cov(po[po$period == period & po$plot == "mono", "BAI"], ab[ab$period == period & ab$plot == "mono", "BAI"]))
 
 
-TSmixobs <- meanmixobs / varmixobs
-TSmixobs
 
-TSmixtheomix <- meanmixtheomix / varmixtheomix
-TSmixtheomix
+  # mean peuplemets mixtes
+  meanmixobs <- mean(p[p$period == period & p$plot == "mix", "BAI"])  / nb_plot_mix
 
-TSmixtheomono <- meanmixtheomono / varmixtheomono
-TSmixtheomono
+  # mean mix théorique (déduite des mix)
+  meanmixtheomix <- (ppetmix * mean(po[po$period == period & po$plot == "mix", "BAI"])) + (psabmix * mean(ab[ab$period == period & ab$plot == "mix", "BAI"]))
+
+  # mean mix théorique (déduite des mono)
+  meanmixtheomono <- (ppet * mean(po[po$period == period & po$plot == "mono", "BAI"])) + (psab * mean(ab[ab$period == period & ab$plot == "mono", "BAI"]))
+
+
+  # TS peuplemets mixtes
+  TSmixobs <- meanmixobs / varmixobs
+
+  # TS mix théorique (déduite des mix)
+  TSmixtheomix <- meanmixtheomix / varmixtheomix
+
+  # TS mix théorique (déduite des mono)
+  TSmixtheomono <- meanmixtheomono / varmixtheomono
+
+
+  a <- data.frame(period = period, rcp = rcp, varmixobs = varmixobs, varmixtheomix = varmixtheomix, varmixtheomono = varmixtheomono, meanmixobs = meanmixobs, meanmixtheomix = meanmixtheomix, meanmixtheomono = meanmixtheomono, TSmixobs = TSmixobs, TSmixtheomix = TSmixtheomix, TSmixtheomono = TSmixtheomono)
+
+  return(a)
+}
+
+a <- TS(period = "p1", rcp = "rcp45", psab = 0.5, ppet = 0.5)
+
+
+prop <- data.frame(ppet = seq(0,1, 0.01))
+prop$psab <- 1 - prop$ppet
+
+
+b <- data.frame(psab = NA, ppet = NA, period = NA, rcp = NA, varmixobs = NA, varmixtheomix = NA, varmixtheomono = NA, meanmixobs = NA, meanmixtheomix = NA, meanmixtheomono = NA, TSmixobs = NA, TSmixtheomix = NA, TSmixtheomono = NA)
+for (i in c("p1", "p2")){
+  for (j in c("rcp45", "rcp85")){
+    for (k in 1:nrow(prop)){
+
+      psab <- prop[k, "psab"]
+      ppet <- prop[k, "ppet"]
+
+      a <- TS(period = i, rcp = j, psab = psab, ppet = ppet)
+      a <- cbind(psab, ppet, a)
+      b <- rbind(b, a)
+
+    }
+  }
+}
+
+b <- b[-1,]
+
+# weighted variance https://www.maths-forum.com/superieur/variance-ponderee-plus-deux-variables-t78091.html
+
+####################################################
+# Plot TS theo
+####################################################
+
+par(mfrow = c(1,2))
+# period 1
+# deduce from mix
+plot(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","TSmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 1500), col = "black", main = "1986 - 2005", xlab = "Proportion of balsam fir", ylab = "TS")
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","TSmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","TSmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","TSmixtheomono"], col = "red", lty = 2)
+
+# period 2
+# deduce from mix
+plot(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","TSmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 1500), col = "black", main = "2081 - 2100", xlab = "Proportion of balsam fir", ylab = "TS")
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","TSmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","TSmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","TSmixtheomono"], col = "red", lty = 2)
+
+
+####################################################
+# Plot var theo
+####################################################
+
+# period 1
+# deduce from mix
+plot(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","varmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 0.05), col = "black", main = "1986 - 2005", xlab = "Proportion of balsam fir", ylab = "productivity variance")
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","varmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","varmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","varmixtheomono"], col = "red", lty = 2)
+
+# period 2
+# deduce from mix
+plot(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","varmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 0.05), col = "black", main = "2081 - 2100", xlab = "Proportion of balsam fir", ylab = "productivity variance")
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","varmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","varmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","varmixtheomono"], col = "red", lty = 2)
+
+
+####################################################
+# Plot mean theo
+####################################################
+
+# period 1
+# deduce from mix
+plot(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","meanmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 6), col = "black", main = "1986 - 2005", xlab = "Proportion of balsam fir", ylab = "productivity")
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","meanmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p1" & b$rcp == "rcp45","psab"], b[b$period == "p1" & b$rcp == "rcp45","meanmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p1" & b$rcp == "rcp85","psab"], b[b$period == "p1" & b$rcp == "rcp85","meanmixtheomono"], col = "red", lty = 2)
+
+# period 2
+# deduce from mix
+plot(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","meanmixtheomix"], type = "l", xlim = c(0.25, 0.75), ylim = c(0, 6), col = "black", main = "2081 - 2100", xlab = "Proportion of balsam fir", ylab = "productivity")
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","meanmixtheomix"], col = "red", lty = 1)
+# deduce from mono
+lines(b[b$period == "p2" & b$rcp == "rcp45","psab"], b[b$period == "p2" & b$rcp == "rcp45","meanmixtheomono"], col = "black", lty = 2)
+lines(b[b$period == "p2" & b$rcp == "rcp85","psab"], b[b$period == "p2" & b$rcp == "rcp85","meanmixtheomono"], col = "red", lty = 2)

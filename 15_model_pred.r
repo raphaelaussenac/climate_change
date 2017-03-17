@@ -10,7 +10,7 @@ library(ggplot2)
 library(plyr)
 library(merTools)
 # function preparation données futures
-source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/11_fun_model.r")
+source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 
 ####################################################
 ## new data
@@ -34,10 +34,8 @@ setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input/futur_
 fileNames <- Sys.glob("*.rdata")
 fileNames
 
+pred_mod <- function(s = c("SAB", "PET")){
 
-sp <- c("SAB", "PET")
-
-for (s in sp){
   # load model
   if (s == "SAB"){
     load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/mod_SAB_lent_fin.rdata")
@@ -47,12 +45,13 @@ for (s in sp){
 
   # predictions
   nsim <- 10
-  predictions <- as.data.frame(matrix(ncol = 8 + nsim))
-  colnames(predictions) <- c("ID_PET_MES", "ESSENCE", "prop_SAB_BA","prop_PET_BA", "yr", paste("V", seq(1,nsim,1), sep=""), "rcp", "mod", "rcpmod" )
+  predictions <- as.data.frame(matrix(ncol = 9 + nsim))
+  colnames(predictions) <- c("ID_PET_MES", "ID_ARB", "ESSENCE", "prop_SAB_BA","prop_PET_BA", "yr", paste("V", seq(1,nsim,1), sep=""), "rcp", "mod", "rcpmod" )
   for (i in fileNames){
     load(i)
     data <- new(data)
-    newdata <- prepare_mod_data_futur(sp = s)
+    sp <- s
+    newdata <- prepare_mod_data_futur(data = data, sp = sp)
 
     # ############### model_select
     # fix <- model.matrix(~ BAtot_CM2HA + sizeE + mixE + compethard + competsoft + DC + DCp + Tannual + Pannual + texture + drainage + texture:drainage + mixE:BAtot_CM2HA + sizeE:DC + sizeE:DCp  + compethard:DC + competsoft:DC + compethard:DCp + competsoft:DCp + mixE:DC + mixE:DCp + texture:sizeE + texture:mixE + texture:compethard + texture:competsoft + texture:DC + texture:DCp + texture:Tannual + texture:Pannual + drainage:sizeE + drainage:mixE + drainage:compethard + drainage:competsoft + drainage:DC + drainage:DCp + drainage:Tannual + drainage:Pannual, data = newdata)
@@ -80,4 +79,12 @@ for (s in sp){
   setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output")
   save(predictions, file = paste("QC_BAI_", s, ".rdata", sep = ""))
   setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input/futur_climate/all_climate_data")
+
+}
+
+# We replicated the addresses nCores times.
+registerDoParallel(2)
+spe <- c("SAB", "PET")
+foreach(i = 1:length(spe), .packages = "merTools", .export = c("new", "prepare_mod_data_futur", "fileNames")) %dopar% {
+  pred_mod(s = spe[i])
 }
