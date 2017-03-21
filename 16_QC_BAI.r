@@ -27,23 +27,24 @@ predict <- function(data = data){
   }
   pred <- tab[-1, ]
 
-  # min, max, mean for each scenario
+  # Add all chronologies from each rcp and each sim
+  pred <- ddply(pred, .(yr, rcpmod, sim), summarise, BAI = sum(BAI))
+
+  # define rcp
   pred$rcp <- substr(pred$rcpmod, 1, 5)
+
+  # min, max, mean for each scenario
   pred_min <- ddply(pred, .(yr, rcp), summarise, BAImin = min(BAI))
-  pred_mean <- ddply(pred, .(yr, rcp), summarise, BAImean = mean(BAI))
   pred_max <- ddply(pred, .(yr, rcp), summarise, BAImax = max(BAI))
   pred_CImin <- ddply(pred, .(yr, rcp), summarise, CImin = wilcox.test(BAI,conf.int=TRUE)$conf.int[1])
   pred_CImax <- ddply(pred, .(yr, rcp), summarise, CImax = wilcox.test(BAI,conf.int=TRUE)$conf.int[2])
 
-
   pred_min$collage <- paste(pred_min$yr, pred_min$rcp, sep = "")
-  pred_mean$collage <- paste(pred_mean$yr, pred_mean$rcp, sep = "")
   pred_max$collage <- paste(pred_max$yr, pred_max$rcp, sep = "")
   pred_CImin$collage <- paste(pred_max$yr, pred_max$rcp, sep = "")
   pred_CImax$collage <- paste(pred_max$yr, pred_max$rcp, sep = "")
 
-  pred <- merge(pred_min, pred_mean[, c("BAImean", "collage")], by = "collage")
-  pred <- merge(pred, pred_max[, c("BAImax", "collage")], by = "collage")
+  pred <- merge(pred_min, pred_max[, c("BAImax", "collage")], by = "collage")
   pred <- merge(pred, pred_CImin[, c("CImin", "collage")], by = "collage")
   pred <- merge(pred, pred_CImax[, c("CImax", "collage")], by = "collage")
 
@@ -69,23 +70,27 @@ pred <- rbind(pred_all, pred_mix, pred_PET, pred_SAB)
 # plots
 ####################################################
 
-ggplot(data = pred)+
-geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-# stat_smooth(aes(yr, BAImin, fill = rcp, color = rcp), method="loess", se = FALSE)+
-# stat_smooth(aes(yr, BAImean, fill = rcp, color = rcp), method="loess", se = FALSE)+
-# stat_smooth(aes(yr, BAImax, fill = rcp, color = rcp), method="loess", se = FALSE)+
-# facet_grid(~ plot, rcpmodales="free", space="free")
-facet_wrap(~ plot, scales="free_y")+
-ggsave ("~/Desktop/plot.pdf", width=10, height= 5)
 
+colnames(pred)[colnames(pred) == "rcp"] <- "Scenario"
+
+ggplot(data = pred)+
+geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
+geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
+xlab("year")+
+ylab("Total BAI")+
+facet_wrap(~ plot, scales="free_y",  labeller = as_labeller(c("all" = "All stands", "mix" = "Mixed stands", "PET" = "Pure aspen stands", "SAB" = "Pure fir stands")))+
+theme_bw()+
+theme(strip.background = element_rect(colour = "white", fill = "white"))
+ggsave ("~/Desktop/plot.pdf", width = 7, height= 10)
+
+colnames(pred)[colnames(pred) == "Scenario"] <- "rcp"
 
 ####################################################
 # SP SCALE: total growth for all, mix, PET & SAB plots
 ####################################################
 
-tab <- as.data.frame(matrix(ncol = 10))
-colnames(tab) <- c("collage", "yr", "rcp", "BAImin", "BAImean", "BAImax", "CImin", "CImax", "plot", "sp")
+tab <- as.data.frame(matrix(ncol = 9))
+colnames(tab) <- c("collage", "yr", "rcp", "BAImin", "BAImax", "CImin", "CImax", "plot", "sp")
 for (i in unique(data$sp)){
   pred_all <- predict(data[data$ESSENCE == i, ])
   pred_all$plot <- "all"
@@ -106,14 +111,18 @@ pred_sp <- tab[-1, ]
 # plots
 ####################################################
 
+colnames(pred_sp)[colnames(pred_sp) == "rcp"] <- "Scenario"
+
+pred_sp <- pred_sp[pred_sp$plot != "all",]
+
+
+
 ggplot(data = pred_sp)+
-geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-# stat_smooth(aes(yr, BAImin, fill = rcp, color = rcp), method = "loess", se = FALSE)+
-# stat_smooth(aes(yr, BAImean, fill = rcp, color = rcp), method = "loess", se = FALSE)+
-# stat_smooth(aes(yr, BAImax, fill = rcp, color = rcp), method = "loess", se = FALSE)+
-# facet_grid(sp ~ plot, scales="fixed", space="fixed")
-facet_wrap(sp ~ plot, scales="free_y")+
-# stat_density2d(aes(x=yr, y=BAImean, fill = rcp), geom="polygon", alpha = 0.2)
-# geom_density2d(aes(x=yr, y=BAImean, colour = rcp))+
-ggsave ("~/Desktop/sp.pdf", width=10, height= 5)
+geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
+geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
+xlab("year")+
+ylab("Total BAI")+
+facet_wrap(sp ~ plot, scales="free_y", labeller = as_labeller(c("PET" = "Aspen", "mix" = "Mixed stands", "mono" = "Pure stands", "SAB" = "Fir")))+
+theme_bw()+
+theme(strip.background = element_rect(colour = "white", fill = "white"))
+ggsave ("~/Desktop/sp.pdf", width = 7, height = 10)
