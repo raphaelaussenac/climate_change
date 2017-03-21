@@ -307,7 +307,7 @@ TS$rcp <- factor(TS$rcp, levels = c("TSmix (rcp45)", "TSmix (rcp85)", "TStheo (r
 # plot
 ggplot()+
 geom_ribbon(data = TS[TS$rcp %in% c("TStheo (rcp85)", "TSmix (rcp85)"),], aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.6)+
-geom_ribbon(data = TS[TS$rcp %in% c("TStheo (rcp45)", "TSmix (rcp45)"),], aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.2)+
+geom_ribbon(data = TS[TS$rcp %in% c("TStheo (rcp45)", "TSmix (rcp45)"),], aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.3)+
 # geom_ribbon(data = TSmono, aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.5)+
 facet_wrap(~ period)+
 theme_bw()+

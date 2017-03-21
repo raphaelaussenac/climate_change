@@ -53,3 +53,21 @@ PET <- ddply(PET, .(ID_ARB, drainage, texture, mix, prop_SAB_BA), summarise, BAI
 plot(PET$prop_SAB_BA, PET$BAIvar)
 summary(lm(BAIvar ~ prop_SAB_BA, data = PET))
 summary(lm(BAIvar ~ mix, data = PET))
+
+
+####################################################
+## TS
+####################################################
+BAItot <- ddply(data, .(mix, AN_CERNE), summarise, BAItot = sum(BAI_CM))
+
+ggplot()+
+geom_line(data = BAItot, aes(AN_CERNE, BAItot, colour = mix))
+
+
+TSmix <- mean(BAItot[BAItot$mix == "MIX", "BAItot"]) / var(BAItot[BAItot$mix == "MIX", "BAItot"])
+TSsab <- mean(BAItot[BAItot$mix == "SAB", "BAItot"]) / var(BAItot[BAItot$mix == "SAB", "BAItot"])
+TSpet <- mean(BAItot[BAItot$mix == "PET", "BAItot"]) / var(BAItot[BAItot$mix == "PET", "BAItot"])
+
+TSmix
+TSsab
+TSpet
