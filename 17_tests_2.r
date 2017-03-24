@@ -60,6 +60,7 @@ SAB <- ddply(data[data$ESSENCE == "SAB" & data$mix %in% c("MIX", "SAB"),], .(yr,
 ggplot()+
 geom_line(data = SAB, aes(yr, BAI, color = variable))+
 facet_grid(rcp ~ mix, scale = "fixed")
+SAB$mix <- factor(SAB$mix, levels = c("SAB", "MIX"), ordered = FALSE)
 summary(lm(BAI ~ period + mix + period:mix, data = SAB[SAB$rcp == "rcp45" & SAB$period != "p",]))
 summary(lm(BAI ~ period + mix + period:mix, data = SAB[SAB$rcp == "rcp85" & SAB$period != "p",]))
 ggplot()+
@@ -73,13 +74,12 @@ ggplot()+
 geom_line(data = PET, aes(yr, BAI, color = variable))+
 facet_grid(rcp ~ mix, scale = "fixed")+
 theme_bw()
+PET$mix <- factor(PET$mix, levels = c("PET", "MIX"), ordered = FALSE)
 summary(lm(BAI ~ period + mix + period:mix, data = PET[PET$rcp == "rcp45" & PET$period != "p",]))
 summary(lm(BAI ~ period + mix + period:mix, data = PET[PET$rcp == "rcp85" & PET$period != "p",]))
 ggplot()+
 geom_boxplot(data = PET[PET$period != "p",], aes(period, BAI, color = mix))+
 facet_grid(~ rcp, scale = "fixed")
-
-
 
 
 ####################################################
@@ -291,32 +291,38 @@ TS <- rbind(TSmono, TSmix)
 # period 2
 TSmix <- minmax(period = "p2",  mixmono = "mix")
 TSmix$rcp <- paste(TSmix$rcp, "mix", sep = "")
-TSmix$period <- "2080-2100"
+TSmix$period <- "2081-2100"
 TSmono <- minmax(period = "p2",  mixmono = "mono")
 TSmono$rcp <- paste(TSmono$rcp, "mono", sep = "")
-TSmono$period <- "2080-2100"
+TSmono$period <- "2081-2100"
 TS <- rbind(TS, TSmono, TSmix)
 
-TS[TS$rcp == "rcp45mix", "rcp"] <- "TSmix (rcp45)"
-TS[TS$rcp == "rcp85mix", "rcp"] <- "TSmix (rcp85)"
-TS[TS$rcp == "rcp45mono", "rcp"] <- "TStheo (rcp45)"
-TS[TS$rcp == "rcp85mono", "rcp"] <- "TStheo (rcp85)"
+TS[TS$rcp == "rcp45mix", "rcp"] <- "TSmix  RCP4.5"
+TS[TS$rcp == "rcp85mix", "rcp"] <- "TSmix  RCP8.5"
+TS[TS$rcp == "rcp45mono", "rcp"] <- "TStheo RCP4.5"
+TS[TS$rcp == "rcp85mono", "rcp"] <- "TStheo RCP8.5"
 
-TS$rcp <- factor(TS$rcp, levels = c("TSmix (rcp45)", "TSmix (rcp85)", "TStheo (rcp45)", "TStheo (rcp85)"), ordered = FALSE)
+TS$plot <- substr(TS$rcp, 1, 6)
+TS$plotp <- paste(TS$plot, TS$period, sep = " ")
+TS$RCP <- substr(TS$rcp, 7, 13)
+
+TS[TS$plotp == "TSmix  1986-2005", "plotp"] <- "a) TStmixed 1986-2005"
+TS[TS$plotp == "TSmix  2081-2100", "plotp"] <- "b) TStmixed 2081-2100"
+TS[TS$plotp == "TStheo 1986-2005", "plotp"] <- "c) TStpure 1986-2005"
+TS[TS$plotp == "TStheo 2081-2100", "plotp"] <- "d) TStpure 2081-2100"
+
 
 # plot
 ggplot()+
-geom_ribbon(data = TS[TS$rcp %in% c("TStheo (rcp85)", "TSmix (rcp85)"),], aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.6)+
-geom_ribbon(data = TS[TS$rcp %in% c("TStheo (rcp45)", "TSmix (rcp45)"),], aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.3)+
-# geom_ribbon(data = TSmono, aes(x = psab, ymax = TSmax, ymin = TSmin, fill = rcp), alpha = 0.5)+
-facet_wrap(~ period)+
+geom_ribbon(data = TS, aes(x = psab, ymax = TSmax, ymin = TSmin, fill = RCP), alpha = 0.5)+
+facet_wrap(~ plotp, nrow = 1)+
 theme_bw()+
-xlim(0.25,0.75)+
-theme(strip.background = element_rect(colour = "white", fill = "white"), legend.title=element_blank())+
-xlab("Proportion of balsam fir")+
+xlim(0,1)+
+theme(strip.background = element_rect(colour = "white", fill = "white"), legend.title=element_blank(), legend.position = "bottom",)+
+xlab("proportion of fir")+
 ylab("TS")
 
-ggsave ("~/Desktop/TStheo.pdf", width = 8, height = 10)
+ggsave ("~/Desktop/TStheo.pdf", width = 8, height = 5)
 
 
 ####################################################

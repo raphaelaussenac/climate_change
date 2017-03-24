@@ -70,7 +70,8 @@ pred <- rbind(pred_all, pred_mix, pred_PET, pred_SAB)
 # plots
 ####################################################
 
-
+pred[pred$rcp == "rcp45", "rcp"] <- "RCP4.5"
+pred[pred$rcp == "rcp85", "rcp"] <- "RCP8.5"
 colnames(pred)[colnames(pred) == "rcp"] <- "Scenario"
 
 ggplot(data = pred)+
@@ -78,10 +79,10 @@ geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
 geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
 xlab("year")+
 ylab("Total BAI")+
-facet_wrap(~ plot, scales="free_y",  labeller = as_labeller(c("all" = "All stands", "mix" = "Mixed stands", "PET" = "Pure aspen stands", "SAB" = "Pure fir stands")))+
+facet_wrap(~ plot, nrow = 1, scales="free_y",  labeller = as_labeller(c("all" = "a) all stands", "mix" = "b) mixed stands", "PET" = "c) pure aspen stands", "SAB" = "d) pure fir stands")))+
 theme_bw()+
-theme(strip.background = element_rect(colour = "white", fill = "white"))
-ggsave ("~/Desktop/plot.pdf", width = 7, height= 10)
+theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
+ggsave ("~/Desktop/plot.pdf", width = 8, height= 5)
 
 colnames(pred)[colnames(pred) == "Scenario"] <- "rcp"
 
@@ -111,9 +112,16 @@ pred_sp <- tab[-1, ]
 # plots
 ####################################################
 
-colnames(pred_sp)[colnames(pred_sp) == "rcp"] <- "Scenario"
+pred_sp[pred_sp$rcp == "rcp45", "rcp"] <- "RCP4.5"
+pred_sp[pred_sp$rcp == "rcp85", "rcp"] <- "RCP8.5"
 
 pred_sp <- pred_sp[pred_sp$plot != "all",]
+
+pred_sp$a <- "a"
+pred_sp[pred_sp$sp == "PET" & pred_sp$plot == "mix", "a"] <- "a) aspen in mixed stands"
+pred_sp[pred_sp$sp == "PET" & pred_sp$plot == "mono", "a"] <- "b) aspen in pure stands"
+pred_sp[pred_sp$sp == "SAB" & pred_sp$plot == "mix", "a"] <- "c) fir in mixed stands"
+pred_sp[pred_sp$sp == "SAB" & pred_sp$plot == "mono", "a"] <- "d) fir in pure stands"
 
 
 
@@ -122,7 +130,8 @@ geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
 geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
 xlab("year")+
 ylab("Total BAI")+
-facet_wrap(sp ~ plot, scales="free_y", labeller = as_labeller(c("PET" = "Aspen", "mix" = "Mixed stands", "mono" = "Pure stands", "SAB" = "Fir")))+
+# facet_wrap(sp ~ plot, scales="free_y", labeller = as_labeller(c("PET" = "a) aspen", "mix" = "in mixed stands", "mono" = "in pure stands", "SAB" = "b) fir")))+
+facet_wrap(~ a, nrow = 1, scales="free_y")+
 theme_bw()+
-theme(strip.background = element_rect(colour = "white", fill = "white"))
-ggsave ("~/Desktop/sp.pdf", width = 7, height = 10)
+theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
+ggsave ("~/Desktop/sp.pdf", width = 8, height = 5)

@@ -24,7 +24,7 @@ load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dat
 source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 sp <- "SAB"
 data <- prepare_mod_data(sp = sp)
-speed <- "lent" # rapid/lent
+speed <- "rapid" # rapid/lent
 
 mod <- run_mod_fin(speed = speed, sp = sp)
 if (speed=="rapid"){

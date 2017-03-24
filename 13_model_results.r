@@ -60,7 +60,7 @@ modPET <- mod
 
 
 # dotchart
-dot <- function(data = data, sp = sp){
+dot <- function(data = data, sp = sp, inter = "del"){
   # bayesian estimation of the parameters
   nsim <- 2000
   bsim <- sim(data, n.sim=nsim)
@@ -76,54 +76,146 @@ dot <- function(data = data, sp = sp){
     a[i,2] <- sum(bsim@fixef[,i]<0)/nsim
   }
   a$sign <- 1
+  a[a$V2 >= 0.90, "sign"] <- "neg-"
   a[a$V2 >= 0.95, "sign"] <- "neg"
+  a[a$V2 >= 0.99, "sign"] <- "neg+"
+  a[a$V2 <= 0.1, "sign"] <- "pos-"
   a[a$V2 <= 0.05, "sign"] <- "pos"
-  a[a$V2 > 0.05 & a$V2 < 0.95, "sign"] <- "ns"
+  a[a$V2 <= 0.01, "sign"] <- "pos+"
+  a[a$V2 > 0.1 & a$V2 < 0.90, "sign"] <- "ns"
+
 
   par$param <- rownames(par)
   par <- merge(par, a, by.x = "param", by.y = "V1")
   par$col <- 1
+  par[par$sign == "pos+", "col"] <- "blue"
   par[par$sign == "pos", "col"] <- "blue"
+  par[par$sign == "pos-", "col"] <- "blue"
+  par[par$sign == "neg+", "col"] <- "red"
   par[par$sign == "neg", "col"] <- "red"
+  par[par$sign == "neg-", "col"] <- "red"
   par[par$sign == "ns", "col"] <- "grey"
 
-  a <- c("(Intercept)", "sizeE", "mixE", "compethard", "competsoft", "DC", "DCp", "Pannual", "Tannual", "drainage2", "texture2", "texture3")
-  b <- c("compethard:DC", "compethard:DCp", "competsoft:DC", "competsoft:DCp", "mixE:BAtot_CM2HA", "mixE:DC", "mixE:DCp", "sizeE:DC", "sizeE:DCp")
+  if (inter == "keep"){
+    # keep Intercept
+    par <- par[1,]
+  } else if (inter == "del"){
+    # delete Intercept
+    par <- par[-1,]
+  }
 
-  par$ord <- 3
-  par[par$param %in% a, "ord"] <- 1
-  par[par$param %in% b, "ord"] <- 2
+  # sifnificance symbol
+  par$symb <- ""
+  par[par$sign == "pos-" | par$sign == "neg-", "symb"] <- ""
+  par[par$sign == "pos" | par$sign == "neg","symb"] <- "**"
+  par[par$sign == "pos+" | par$sign == "neg+","symb"] <- "***"
+  # sort by strength
+  par <- par[order(par$mean),]
 
-  par <- par[order(par$ord),]
-  par <- par %>% arrange(-row_number())
-  par <- par[-nrow(par), ]
+  # Change variable name
+  par$param[par$param == "(Intercept)"] <- "    intercept "
+  # avant les deux points
+  par$param[substr(par$param, 1, 7) == "texture"] <- paste("T", substr(par$param[substr(par$param, 1, 7) == "texture"], 8, nchar(par$param[substr(par$param, 1, 7) == "texture"])), sep = "")
+
+  par$param[substr(par$param, 1, 8) == "drainage"] <- paste("D", substr(par$param[substr(par$param, 1, 8) == "drainage"], 9, nchar(par$param[substr(par$param, 1, 8) == "drainage"])), sep = "")
+
+  par$param[substr(par$param, 1, 5) == "sizeE"] <- paste("DBH", substr(par$param[substr(par$param, 1, 5) == "sizeE"], 6, nchar(par$param[substr(par$param, 1, 5) == "sizeE"])), sep = "")
+
+  par$param[substr(par$param, 1, 4) == "mixE"] <- paste("Pr", substr(par$param[substr(par$param, 1, 4) == "mixE"], 5, nchar(par$param[substr(par$param, 1, 4) == "mixE"])), sep = "")
+
+  par$param[substr(par$param, 1, 2) == "DC"] <- paste("DCm", substr(par$param[substr(par$param, 1, 2) == "DC"], 3, nchar(par$param[substr(par$param, 1, 2) == "DC"])), sep = "")
+
+  par$param[substr(par$param, 1, 3) == "DCp"] <- paste("DCmp", substr(par$param[substr(par$param, 1, 3) == "DCp"], 4, nchar(par$param[substr(par$param, 1, 3) == "DCp"])), sep = "")
+
+  # avant les deux points
+  # compethard / soft
+  par$param[substr(par$param, 4, 14) == "compethard"] <- paste(substr(par$param[substr(par$param, 4, 14) == "compethard"], 1, 3), "Ch", sep = "")
+  par$param[substr(par$param, 4, 14) == "competsoft"] <- paste(substr(par$param[substr(par$param, 4, 14) == "competsoft"], 1, 3), "Cs", sep = "")
+  par$param[substr(par$param, 5, 15) == "compethard"] <- paste(substr(par$param[substr(par$param, 5, 15) == "compethard"], 1, 4), "Ch", sep = "")
+  par$param[substr(par$param, 5, 15) == "competsoft"] <- paste(substr(par$param[substr(par$param, 5, 15) == "competsoft"], 1, 4), "Cs", sep = "")
+  par$param[substr(par$param, 6, 16) == "compethard"] <- paste(substr(par$param[substr(par$param, 6, 16) == "compethard"], 1, 5), "Ch", sep = "")
+  par$param[substr(par$param, 6, 16) == "competsoft"] <- paste(substr(par$param[substr(par$param, 6, 16) == "competsoft"], 1, 5), "Cs", sep = "")
+  # drainage
+  par$param[substr(par$param, 4, 11) == "drainage"] <- paste(substr(par$param[substr(par$param, 4, 11) == "drainage"], 1, 3), "D", substr(par$param[substr(par$param, 4, 11) == "drainage"], 12, 12), sep = "")
+  # P & T annual
+  par$param[substr(par$param, 4, 10) == "Pannual"] <- paste(substr(par$param[substr(par$param, 4, 10) == "Pannual"], 1, 3), "Pan", sep = "")
+  par$param[substr(par$param, 4, 10) == "Tannual"] <- paste(substr(par$param[substr(par$param, 4, 10) == "Tannual"], 1, 3), "Tan", sep = "")
+  # DC & DCp
+  par$param[substr(par$param, 4, 6) == "DC"] <- paste(substr(par$param[substr(par$param, 4, 6) == "DC"], 1, 3), "DCm", sep = "")
+  par$param[substr(par$param, 5, 7) == "DC"] <- paste(substr(par$param[substr(par$param, 5, 7) == "DC"], 1, 4), "DCm", sep = "")
+
+
+  par$param[substr(par$param, 4, 7) == "DCp"] <- paste(substr(par$param[substr(par$param, 4, 7) == "DCp"], 1, 3), "DCmp", sep = "")
+  par$param[substr(par$param, 5, 8) == "DCp"] <- paste(substr(par$param[substr(par$param, 5, 8) == "DCp"], 1, 4), "DCmp", sep = "")
+
+
+  # MixE sizeE BAtot
+  par$param[substr(par$param, 4, 8) == "mixE"] <- paste(substr(par$param[substr(par$param, 4, 8) == "mixE"], 1, 3), "Pr", sep = "")
+  par$param[substr(par$param, 4, 9) == "sizeE"] <- paste(substr(par$param[substr(par$param, 4, 9) == "sizeE"], 1, 3), "DBH", sep = "")
+  par$param[substr(par$param, 4, 15) == "BAtot_CM2HA"] <- paste(substr(par$param[substr(par$param, 4, 15) == "BAtot_CM2HA"], 1, 3), "BAt", sep = "")
+
+  # a <- c("(Intercept)", "sizeE", "mixE", "compethard", "competsoft", "DC", "DCp", "Pannual", "Tannual", "drainage2", "texture2", "texture3")
+  # b <- c("compethard:DC", "compethard:DCp", "competsoft:DC", "competsoft:DCp", "mixE:BAtot_CM2HA", "mixE:DC", "mixE:DCp", "sizeE:DC", "sizeE:DCp")
+  #
+  # par$ord <- 3
+  # par[par$param %in% a, "ord"] <- 1
+  # par[par$param %in% b, "ord"] <- 2
+  #
+  # par <- par[order(par$ord),]
+  # par <- par %>% arrange(-row_number())
+  # par <- par[-nrow(par), ]
 
   # sp <- sp
 
   if (sp == "SAB"){
-    dotchart(par$mean, labels = par$param, cex = 0.7, main = "SAB", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color=par$col)
-    abline(v = 0, col = "orange")
-    abline(h = c(26.5, 35.5))
-    segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = par$col)
+    if (inter == "del"){
+      # dotchart(par$mean, labels = par$param, cex = 0.7, main = "fir", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color=par$col)
+      dotchart(par$mean, labels = par$param, cex = 0.7, main = "fir", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color = "black")
+
+      abline(v = 0, col = "grey", lty = 2)
+      text(x = par$mean, y = 1:nrow(par), labels = par$symb, pos = 4, col = "black", cex = 0.75)
+      # abline(h = c(26.5, 35.5))
+      # segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = par$col)
+      segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = "black")
+    } else if (inter == "keep"){
+      dotchart(par$mean, labels = par$param, cex = 0.7, xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color = "black")
+      text(x = par$mean, y = 1:nrow(par), labels = par$symb, pos = 4, col = "black", cex = 0.75)
+      segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = "black")
+    }
   }
+
 
   if (sp == "PET"){
-    dotchart(par$mean, labels = par$param, cex = 0.7, main = "PET", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color=par$col)
-    abline(v = 0, col = "orange")
-    abline(h = c(26.5, 35.5))
-    segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = par$col)
-  }
+    if (inter == "del"){
+      # dotchart(par$mean, labels = par$param, cex = 0.7, main = "aspen", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color=par$col)
+      dotchart(par$mean, labels = par$param, cex = 0.7, main = "aspen", xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color = "black")
 
+      abline(v = 0, col = "grey", lty = 2)
+      text(x = par$mean, y = 1:nrow(par), labels = par$symb, pos = 4, col = "black", cex = 0.75)
+      # abline(h = c(26.5, 35.5))
+      # segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = par$col)
+      segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = "black")
+    } else if (inter == "keep"){
+      dotchart(par$mean, labels = par$param, cex = 0.7, xlab = "", pch = 16, xlim = c(min(par$bas), max(par$haut)), color = "black")
+      abline(v = 0, col = "grey", lty = 2)
+      text(x = par$mean, y = 1:nrow(par), labels = par$symb, pos = 4, col = "black", cex = 0.75)
+      segments(par$bas, 1:nrow(par), par$haut, 1:nrow(par), col = "black")
+    }
+  }
 }
 
 ####################################################
 ## plot dotchart
 ####################################################
 
-par(mfrow = c(1,2))
-dot(data = modSAB, sp = "SAB")
-dot(data = modPET, sp = "PET")
-quartz.save("~/Desktop/dochart.pdf", type = "pdf", device = dev.cur())
+par(mar = c(2,0.1,1.25,1.25))
+layout(matrix(c(1,2,3,4), 2, 2, byrow = TRUE), height = c(12,1.5))
+dot(data = modSAB, sp = "SAB", inter = "del")
+dot(data = modPET, sp = "PET", inter = "del")
+dot(data = modSAB, sp = "SAB", inter = "keep")
+dot(data = modPET, sp = "PET", inter = "keep")
+
+quartz.save("~/Desktop/dochart.pdf", type = "pdf", width = 8, height = 12, device = dev.cur())
 
 # ####################################################
 # ## plot CI
@@ -150,7 +242,7 @@ rsquared(mod)
 
 # package MuMIn
 library(MuMIn)
-r.squaredGLMM(mod)
+round(r.squaredGLMM(mod), digits = 2)
 # r.squaredLR(mod)
 
 ####################################################
@@ -160,17 +252,17 @@ allEffects(mod)
 plot(allEffects(mod))
 
 
-eff <- as.data.frame(Effect(c("texture","DCp"),mod, se=T))  ## texture, texture toujours en premier
+eff <- as.data.frame(Effect(c("competsoft","DC"),mod, se=T))  ## competsoft, competsoft toujours en premier
 colnames(eff)[colnames(eff)=="fit"] <- "lBAI"
-plot(Effect(c("texture","DCp"),mod, se=T))
+plot(Effect(c("competsoft","DC"),mod, se=T))
 
 
-eff$texture <- factor(eff$texture, levels= sort(unique(eff$texture)),ordered = TRUE)
+eff$competsoft <- factor(eff$competsoft, levels= sort(unique(eff$competsoft)),ordered = TRUE)
 
-ggplot(eff, aes(x=DCp,y=lBAI,group=texture)) +
-geom_line(aes(color=as.integer(as.character(texture)))) +
+ggplot(eff, aes(x=DC,y=lBAI,group=competsoft)) +
+geom_line(aes(color=as.integer(as.character(competsoft)))) +
 # facet_grid(. ~ plotsppar, scales = "free", space = "fixed", switch = "x")
-scale_colour_gradient(name = "texture", low = "green", high = "red")+
+scale_colour_gradient(name = "competsoft", low = "green", high = "red")+
 theme(axis.ticks = element_line(colour="black"),
 axis.text.y = element_text(size= 13, angle=0, hjust=0.5),
 axis.text.x = element_text(size= 13, angle=0, hjust=0.5),
@@ -187,7 +279,7 @@ strip.background = element_rect(colour="white",fill="white"),
 strip.text.x = element_blank(),
 panel.margin = unit(0.25, "lines"))+
 # plot.margin = unit(c(0,0,0,0),"mm"))+
-xlab("DCp")+
+xlab("DC")+
 ylab("log(BAI)")
 # ggtitle("Fixed effects values (absolute values)")
 

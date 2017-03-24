@@ -9,6 +9,9 @@ library("ggplot2")
 ####################################################
 load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAI.rdata")
 data <- data[, c("ID_PET_MES", "ID_ARB", "AN_CERNE", "BAI_CM", "ESSENCE", "mix", "drainage", "texture", "prop_PET_BA", "prop_SAB_BA")]
+data$mix <- factor(data$mix, levels = c("PET", "SAB", "MIX"), ordered = FALSE)
+
+
 
 ####################################################
 ## mean(SAB)
@@ -71,3 +74,7 @@ TSpet <- mean(BAItot[BAItot$mix == "PET", "BAItot"]) / var(BAItot[BAItot$mix == 
 TSmix
 TSsab
 TSpet
+
+plot(TSmix, TSsab)
+
+plot(BAItot[BAItot$mix == "MIX", "AN_CERNE"], BAItot[BAItot$mix == "MIX", "BAItot"], type = "l", xlab = "Yr", ylab = "BAItot")
