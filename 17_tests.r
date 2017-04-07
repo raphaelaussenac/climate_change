@@ -181,21 +181,30 @@ TS <- function(period = "p1", rcpmod = "rcp45_ACCES", psab = 0.5, ppet = 0.5, va
   varmixobs <- var(p[p$mix == "MIX", "BAI"]) / nb_plot_mix
 
   # var mix théorique (déduite des mix)
-  varmixtheomix <- (ppetmix^2 * var(po[po$mix == "MIX", "BAI"])) + (psabmix^2 * var(ab[ab$mix == "MIX", "BAI"])) + (2 * ppetmix * psabmix * cov(po[po$mix == "MIX", "BAI"], ab[ab$mix == "MIX", "BAI"]))
+  varpetmix <- (ppetmix^2 * var(po[po$mix == "MIX", "BAI"]))
+  varsabmix <- (psabmix^2 * var(ab[ab$mix == "MIX", "BAI"]))
+  covmix <- (2 * ppetmix * psabmix * cov(po[po$mix == "MIX", "BAI"], ab[ab$mix == "MIX", "BAI"]))
+  varmixtheomix <- varpetmix + varsabmix + covmix
 
   # var mix théorique (déduite des mono)
-  varmixtheomono <- (ppet^2 * var(po[po$mix == "PET", "BAI"])) + (psab^2 * var(ab[ab$mix == "SAB", "BAI"])) + (2 * ppet * psab * cov(po[po$mix == "PET", "BAI"], ab[ab$mix == "SAB", "BAI"]))
-
+  varpetmono <- (ppet^2 * var(po[po$mix == "PET", "BAI"]))
+  varsabmono <- (psab^2 * var(ab[ab$mix == "SAB", "BAI"]))
+  covmono <- (2 * ppet * psab * cov(po[po$mix == "PET", "BAI"], ab[ab$mix == "SAB", "BAI"]))
+  varmixtheomono <- varpetmono + varsabmono + covmono
 
 
   # mean peuplemets mixtes
   meanmixobs <- mean(p[p$mix == "MIX", "BAI"])  / nb_plot_mix
 
   # mean mix théorique (déduite des mix)
-  meanmixtheomix <- (ppetmix * mean(po[po$mix == "MIX", "BAI"])) + (psabmix * mean(ab[ab$mix == "MIX", "BAI"]))
+  meanpetmix <- (ppetmix * mean(po[po$mix == "MIX", "BAI"]))
+  meansabmix <- (psabmix * mean(ab[ab$mix == "MIX", "BAI"]))
+  meanmixtheomix <- meanpetmix + meansabmix
 
   # mean mix théorique (déduite des mono)
-  meanmixtheomono <- (ppet * mean(po[po$mix == "PET", "BAI"])) + (psab * mean(ab[ab$mix == "SAB", "BAI"]))
+  meanpetmono <- (ppet * mean(po[po$mix == "PET", "BAI"]))
+  meansabmono <- (psab * mean(ab[ab$mix == "SAB", "BAI"]))
+  meanmixtheomono <- meanpetmono + meansabmono
 
 
   # TS peuplemets mixtes
@@ -208,7 +217,7 @@ TS <- function(period = "p1", rcpmod = "rcp45_ACCES", psab = 0.5, ppet = 0.5, va
   TSmixtheomono <- meanmixtheomono / varmixtheomono
 
 
-  a <- data.frame(period = period, rcpmod = rcpmod, varmixobs = varmixobs, varmixtheomix = varmixtheomix, varmixtheomono = varmixtheomono, meanmixobs = meanmixobs, meanmixtheomix = meanmixtheomix, meanmixtheomono = meanmixtheomono, TSmixobs = TSmixobs, TSmixtheomix = TSmixtheomix, TSmixtheomono = TSmixtheomono, variable = variable)
+  a <- data.frame(period = period, rcpmod = rcpmod, varmixobs = varmixobs, varmixtheomix = varmixtheomix, varmixtheomono = varmixtheomono, meanmixobs = meanmixobs, meanmixtheomix = meanmixtheomix, meanmixtheomono = meanmixtheomono, TSmixobs = TSmixobs, TSmixtheomix = TSmixtheomix, TSmixtheomono = TSmixtheomono, variable = variable, varpetmix, varsabmix, covmix, varpetmono, varsabmono, covmono, meanpetmix, meansabmix, meanpetmono, meansabmono )
 
   return(a)
 }
@@ -222,7 +231,7 @@ prop <- data.frame(ppet = seq(0,1, 0.01))
 prop$psab <- 1 - prop$ppet
 
 
-b <- data.frame(psab = NA, ppet = NA, period = NA, rcpmod = NA, varmixobs = NA, varmixtheomix = NA, varmixtheomono = NA, meanmixobs = NA, meanmixtheomix = NA, meanmixtheomono = NA, TSmixobs = NA, TSmixtheomix = NA, TSmixtheomono = NA, variable = NA)
+b <- data.frame(psab = NA, ppet = NA, period = NA, rcpmod = NA, varmixobs = NA, varmixtheomix = NA, varmixtheomono = NA, meanmixobs = NA, meanmixtheomix = NA, meanmixtheomono = NA, TSmixobs = NA, TSmixtheomix = NA, TSmixtheomono = NA, variable = NA, varpetmix = NA, varsabmix = NA, covmix = NA, varpetmono = NA, varsabmono = NA, covmono = NA, meanpetmix = NA, meansabmix = NA, meanpetmono = NA, meansabmono = NA)
 for (i in c("p1", "p2")){
   for (j in unique(data$rcpmod)){
     for (l in unique(data$variable)){
@@ -258,71 +267,113 @@ b$rcp <- substr(b$rcpmod,1,5)
 
 
 # min, max pour ribbon
-minmax <- function(period = "p1", mixmono = "mix"){
+minmax <- function(period = "p1", mixmono = "mix", component = "TS"){
+  if (component == "TS"){
+    b$componentmix <- b$TSmixtheomix
+    b$componentmono <- b$TSmixtheomono
+  } else if (component == "mean"){
+    b$componentmix <- b$meanpetmix + b$meansabmix
+    b$componentmono <- b$meanpetmono + b$meansabmono
+  } else if (component == "var"){
+    b$componentmix <- b$varpetmix + b$varsabmix + b$covmix
+    b$componentmono <- b$varpetmono + b$varsabmono + b$covmono
+  } else if (component == "meanpet"){
+    b$componentmix <- b$meanpetmix
+    b$componentmono <- b$meanpetmono
+  } else if (component == "meansab"){
+    b$componentmix <- b$meansabmix
+    b$componentmono <- b$meansabmono
+  } else if (component == "varpet"){
+    b$componentmix <- b$varpetmix
+    b$componentmono <- b$varpetmono
+  } else if (component == "varsab"){
+    b$componentmix <- b$varsabmix
+    b$componentmono <- b$varsabmono
+  } else if (component == "cov"){
+    b$componentmix <- b$covmix
+    b$componentmono <- b$covmono
+  }
+
   if (mixmono == "mix"){
-    TSmin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, TSmin = min(TSmixtheomix))
-    TSmax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, TSmax = max(TSmixtheomix))
-    CImin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImin = wilcox.test(TSmixtheomix, conf.int=TRUE)$conf.int[1])
-    CImax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImax = wilcox.test(TSmixtheomix, conf.int=TRUE)$conf.int[2])
-    TSmix <- cbind(TSmin, TSmax[,"TSmax"], CImin[,"CImin"], CImax[,"CImax"])
-    colnames(TSmix) <- c("psab", "rcp", "TSmin", "TSmax", "CImin", "CImax")
-    a <- TSmix
+    compomin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, compomin = min(componentmix))
+    compomax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, compomax = max(componentmix))
+    # CImin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImin = wilcox.test(componentmix, conf.int=TRUE)$conf.int[1])
+    # CImax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImax = wilcox.test(componentmix, conf.int=TRUE)$conf.int[2])
+    compomix <- cbind(compomin, compomax[,"compomax"])#, CImin[,"CImin"], CImax[,"CImax"])
+    colnames(compomix) <- c("psab", "rcp", paste(component, "min", sep = ""), paste(component, "max", sep = ""))#, "CImin", "CImax")
+    a <- compomix
   } else if (mixmono == "mono"){
-    TSmin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, TSmin = min(TSmixtheomono))
-    TSmax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, TSmax = max(TSmixtheomono))
-    CImin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImin = wilcox.test(TSmixtheomono, conf.int=TRUE)$conf.int[1])
-    CImax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImax = wilcox.test(TSmixtheomono, conf.int=TRUE)$conf.int[2])
-    TSmono <- cbind(TSmin, TSmax[,"TSmax"], CImin[,"CImin"], CImax[,"CImax"])
-    colnames(TSmono) <- c("psab", "rcp", "TSmin", "TSmax", "CImin", "CImax")
-    a <- TSmono
+    compomin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, compomin = min(componentmono))
+    compomax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, compomax = max(componentmono))
+    # CImin <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImin = wilcox.test(componentmono, conf.int=TRUE)$conf.int[1])
+    # CImax <- ddply(b[b$period == period, ], .(psab, rcp), summarise, CImax = wilcox.test(componentmono, conf.int=TRUE)$conf.int[2])
+    compomono <- cbind(compomin, compomax[,"compomax"])#, CImin[,"CImin"], CImax[,"CImax"])
+    colnames(compomono) <- c("psab", "rcp", paste(component, "min", sep = ""), paste(component, "max", sep = ""))#, "CImin", "CImax")
+    a <- compomono
   }
   return(a)
 }
 
 
-# period 1
-TSmix <- minmax(period = "p1",  mixmono = "mix")
-TSmix$rcp <- paste(TSmix$rcp, "mix", sep = "")
-TSmix$period <- "1986-2005"
-TSmono <- minmax(period = "p1",  mixmono = "mono")
-TSmono$rcp <- paste(TSmono$rcp, "mono", sep = "")
-TSmono$period <- "1986-2005"
-TS <- rbind(TSmono, TSmix)
-# period 2
-TSmix <- minmax(period = "p2",  mixmono = "mix")
-TSmix$rcp <- paste(TSmix$rcp, "mix", sep = "")
-TSmix$period <- "2081-2100"
-TSmono <- minmax(period = "p2",  mixmono = "mono")
-TSmono$rcp <- paste(TSmono$rcp, "mono", sep = "")
-TSmono$period <- "2081-2100"
-TS <- rbind(TS, TSmono, TSmix)
+plotTS <- function(component = "TS"){
 
-TS[TS$rcp == "rcp45mix", "rcp"] <- "TSmix  RCP4.5"
-TS[TS$rcp == "rcp85mix", "rcp"] <- "TSmix  RCP8.5"
-TS[TS$rcp == "rcp45mono", "rcp"] <- "TStheo RCP4.5"
-TS[TS$rcp == "rcp85mono", "rcp"] <- "TStheo RCP8.5"
+  # period 1
+  p1mix <- minmax(period = "p1",  mixmono = "mix", component = component)
+  p1mix$rcp <- paste(p1mix$rcp, "mix", sep = "")
+  p1mix$period <- "1986-2005"
+  p1mono <- minmax(period = "p1",  mixmono = "mono", component = component)
+  p1mono$rcp <- paste(p1mono$rcp, "mono", sep = "")
+  p1mono$period <- "1986-2005"
 
-TS$plot <- substr(TS$rcp, 1, 6)
-TS$plotp <- paste(TS$plot, TS$period, sep = " ")
-TS$RCP <- substr(TS$rcp, 7, 13)
+  # period 2
+  p2mix <- minmax(period = "p2",  mixmono = "mix", component = component)
+  p2mix$rcp <- paste(p2mix$rcp, "mix", sep = "")
+  p2mix$period <- "2081-2100"
+  p2mono <- minmax(period = "p2",  mixmono = "mono", component = component)
+  p2mono$rcp <- paste(p2mono$rcp, "mono", sep = "")
+  p2mono$period <- "2081-2100"
+  p <- rbind(p1mix, p2mix, p1mono, p2mono)
 
-TS[TS$plotp == "TSmix  1986-2005", "plotp"] <- "a) TStmixed 1986-2005"
-TS[TS$plotp == "TSmix  2081-2100", "plotp"] <- "b) TStmixed 2081-2100"
-TS[TS$plotp == "TStheo 1986-2005", "plotp"] <- "c) TStpure 1986-2005"
-TS[TS$plotp == "TStheo 2081-2100", "plotp"] <- "d) TStpure 2081-2100"
+  p$RCP <- 1
+  p[substr(p$rcp, 1, 5) == "rcp45", "RCP"] <- "RCP4.5"
+  p[substr(p$rcp, 1, 5) == "rcp85", "RCP"] <- "RCP8.5"
+  p$RCP <- as.factor(p$RCP)
+  p$mix <- 1
+  p[substr(p$rcp, 6, 9) == "mono", "mix"] <- "pure"
+  p[substr(p$rcp, 6, 8) == "mix", "mix"] <- "mixed"
+  p$mix <- as.factor(p$mix)
+
+  p$lettre <- 1
+  p[p$period == "1986-2005" & p$mix == "mixed", "lettre"] <- "a) "
+  p[p$period == "2081-2100" & p$mix == "mixed", "lettre"] <- "b) "
+  p[p$period == "1986-2005" & p$mix == "pure", "lettre"] <- "c) "
+  p[p$period == "2081-2100" & p$mix == "pure", "lettre"] <- "d) "
+  p$plotp <- paste(paste(p$lettre, component, "t", p$mix, sep = ""), p$period, sep = " ")
+  p$plotp <- as.factor(p$plotp)
+
+  colnames(p)[colnames(p) == paste(component, "max", sep = "")] <- "Ymax"
+  colnames(p)[colnames(p) == paste(component, "min", sep = "")] <- "Ymin"
+
+  # plot
+  ggplot()+
+  geom_ribbon(data = p, aes(x = psab, ymax = Ymax, ymin = Ymin, fill = RCP), alpha = 0.5)+
+  facet_wrap(~ plotp, nrow = 1)+
+  theme_bw()+
+  xlim(0,1)+
+  theme(strip.background = element_rect(colour = "white", fill = "white"), legend.title=element_blank(), legend.position = "bottom",)+
+  xlab("proportion of fir")+
+  ylab(component)
+
+  ggsave (paste("~/Desktop/", component, "theo.pdf", sep = ""), width = 8, height = 5)
+
+}
+
+plotTS(component = "varsab")
 
 
-# plot
-ggplot()+
-geom_ribbon(data = TS, aes(x = psab, ymax = TSmax, ymin = TSmin, fill = RCP), alpha = 0.5)+
-facet_wrap(~ plotp, nrow = 1)+
-theme_bw()+
-xlim(0,1)+
-theme(strip.background = element_rect(colour = "white", fill = "white"), legend.title=element_blank(), legend.position = "bottom",)+
-xlab("proportion of fir")+
-ylab("TS")
-
-ggsave ("~/Desktop/TStheo.pdf", width = 8, height = 5)
+for (i in c("TS", "mean", "var", "meanpet", "varpet", "meansab", "varsab", "cov")){
+  plotTS(component = i)
+}
 
 
 ####################################################
