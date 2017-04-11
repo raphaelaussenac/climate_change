@@ -78,7 +78,7 @@ ggplot(data = pred)+
 geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
 geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
 xlab("year")+
-ylab("Total BAI")+
+ylab("total BAI")+
 facet_wrap(~ plot, nrow = 1, scales="free_y",  labeller = as_labeller(c("all" = "a) all stands", "mix" = "b) mixed stands", "PET" = "c) pure aspen stands", "SAB" = "d) pure fir stands")))+
 theme_bw()+
 theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
@@ -126,10 +126,10 @@ pred_sp[pred_sp$sp == "SAB" & pred_sp$plot == "mono", "a"] <- "d) fir in pure st
 
 
 ggplot(data = pred_sp)+
-geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = Scenario), alpha = 0.2)+
-geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = Scenario), alpha = 0.5)+
+geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
+geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
 xlab("year")+
-ylab("Total BAI")+
+ylab("total BAI")+
 # facet_wrap(sp ~ plot, scales="free_y", labeller = as_labeller(c("PET" = "a) aspen", "mix" = "in mixed stands", "mono" = "in pure stands", "SAB" = "b) fir")))+
 facet_wrap(~ a, nrow = 1, scales="free_y")+
 theme_bw()+

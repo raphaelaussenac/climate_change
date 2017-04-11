@@ -52,6 +52,16 @@ data$mix <- factor(data$mix, levels = c("MIX", "PET", "SAB"),ordered = FALSE)
 data$period <- factor(data$period, levels = c("p1", "p2", "p"), ordered = FALSE)
 
 ####################################################
+# test différence entre mixed et pet
+####################################################
+dd <- data
+
+dd$mix <- factor(dd$mix, levels = c("PET", "SAB", "MIX"), ordered = FALSE)
+
+summary(lm(BAI ~ period + mix + period:mix, data = dd[dd$mix %in% c("MIX", "PET") & dd$period != "p" & dd$rcp == "rcp45",]))
+
+
+####################################################
 # Test effet du mélange sur déclin de croissance de
 # PET et augmentation de croissance de SAB
 ####################################################
@@ -274,7 +284,7 @@ minmax <- function(period = "p1", mixmono = "mix", component = "TS"){
   } else if (component == "mean"){
     b$componentmix <- b$meanpetmix + b$meansabmix
     b$componentmono <- b$meanpetmono + b$meansabmono
-  } else if (component == "var"){
+  } else if (component == "variance"){
     b$componentmix <- b$varpetmix + b$varsabmix + b$covmix
     b$componentmono <- b$varpetmono + b$varsabmono + b$covmono
   } else if (component == "meanpet"){
@@ -362,7 +372,7 @@ plotTS <- function(component = "TS"){
   xlim(0,1)+
   theme(strip.background = element_rect(colour = "white", fill = "white"), legend.title=element_blank(), legend.position = "bottom",)+
   xlab("proportion of fir")+
-  ylab(component)
+  ylab("") #component)
 
   ggsave (paste("~/Desktop/", component, "theo.pdf", sep = ""), width = 8, height = 5)
 
@@ -371,7 +381,7 @@ plotTS <- function(component = "TS"){
 plotTS(component = "varsab")
 
 
-for (i in c("TS", "mean", "var", "meanpet", "varpet", "meansab", "varsab", "cov")){
+for (i in c("TS", "mean", "variance", "meanpet", "varpet", "meansab", "varsab", "cov")){
   plotTS(component = i)
 }
 
