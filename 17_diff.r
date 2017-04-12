@@ -62,6 +62,9 @@ pred <- merge(pred, pred_CImax[, c("CImax", "collage")], by = "collage")
 # plot
 ################
 
+pred[pred$rcp == "rcp45", "rcp" ] <- "RCP4.5"
+pred[pred$rcp == "rcp85", "rcp" ] <- "RCP8.5"
+
 ggplot(data = pred)+
 geom_ribbon(aes(x=yr, ymax=diffmax, ymin=diffmin, fill = rcp), alpha = 0.2)+
 geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
@@ -103,6 +106,9 @@ pred <- merge(pred, pred_CImax[, c("CImax", "collage")], by = "collage")
 ################
 # plot
 ################
+
+pred[pred$rcp == "rcp45", "rcp" ] <- "RCP4.5"
+pred[pred$rcp == "rcp85", "rcp" ] <- "RCP8.5"
 
 ggplot(data = pred)+
 geom_ribbon(aes(x=yr, ymax=diffmax, ymin=diffmin, fill = rcp), alpha = 0.2)+

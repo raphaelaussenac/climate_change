@@ -121,13 +121,78 @@ c[c$compo == "MIX", "compo"] <- "b) mixed stands"
 c[c$compo == "PET", "compo"] <- "c) pure aspen stands"
 c[c$compo == "SAB", "compo"] <- "d) pure fir stands"
 
-ggplot(data = c[c$par == "var", ])+
+# scenarios names
+c[c$rcp == "rcp45", "rcp" ] <- "RCP4.5"
+c[c$rcp == "rcp85", "rcp" ] <- "RCP8.5"
+
+
+ggplot(data = c[c$par == "ts", ])+
 geom_ribbon(aes(x=yr, ymax=diffmax, ymin=diffmin, fill = rcp), alpha = 0.2)+
 geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
 facet_wrap( ~ compo, scale = "free", nrow = 1)+
 xlab("year")+
-ylab("variance of total BAI")+
+ylab("TS of total BAI")+
 theme_bw()+
 theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
 
-ggsave("~/Desktop/var.pdf", width = 8, height = 5)
+ggsave("~/Desktop/ts.pdf", width = 8, height = 5)
+
+
+####################################################
+# difference
+####################################################
+
+
+diff <- function(par = c("var", "ts")){
+
+  ts <- d[, c("yr", "rcp", "mod", "variable", "mix", par)]
+  ts <- dcast(ts, yr + rcp + mod + variable ~ mix)
+
+  # difference
+  ts$diff <- 1
+  ts$diff <- ts$MIX - ts$PET
+
+  # minmax
+  d_min <- ddply(ts, .(yr, rcp), summarise, diffmin = min(diff))
+  d_max <- ddply(ts, .(yr, rcp), summarise, diffmax = max(diff))
+  d_CImin <- ddply(ts, .(yr, rcp), summarise, CImin = wilcox.test(diff,conf.int=TRUE)$conf.int[1])
+  d_CImax <- ddply(ts, .(yr, rcp), summarise, CImax = wilcox.test(diff,conf.int=TRUE)$conf.int[2])
+
+  d_min$collage <- paste(d_min$yr, d_min$rcp, sep = "")
+  d_max$collage <- paste(d_max$yr, d_max$rcp, sep = "")
+  d_CImin$collage <- paste(d_max$yr, d_max$rcp, sep = "")
+  d_CImax$collage <- paste(d_max$yr, d_max$rcp, sep = "")
+
+  b <- merge(d_min, d_max[, c("diffmax", "collage")], by = "collage")
+  b <- merge(b, d_CImin[, c("CImin", "collage")], by = "collage")
+  b <- merge(b, d_CImax[, c("CImax", "collage")], by = "collage")
+
+  # scenarios names
+  b[b$rcp == "rcp45", "rcp" ] <- "RCP4.5"
+  b[b$rcp == "rcp85", "rcp" ] <- "RCP8.5"
+
+  if (par == "ts"){
+    ggplot(data = b)+
+    geom_ribbon(aes(x=yr, ymax=diffmax, ymin=diffmin, fill = rcp), alpha = 0.2)+
+    geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
+    xlab("year")+
+    ylab("TS in mixed stands - in pure aspen stands")+
+    theme_bw()+
+    theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
+    ggsave("~/Desktop/diffts.pdf", width = 4, height = 5)
+  } else if (par == "var"){
+    ggplot(data = b)+
+    geom_ribbon(aes(x=yr, ymax=diffmax, ymin=diffmin, fill = rcp), alpha = 0.2)+
+    geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
+    xlab("year")+
+    ylab("growth variance in mixed stands - in pure aspen stands")+
+    theme_bw()+
+    theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
+    ggsave("~/Desktop/diffvar.pdf", width = 4, height = 5)
+  }
+}
+
+
+
+diff("ts")
+diff("var")
