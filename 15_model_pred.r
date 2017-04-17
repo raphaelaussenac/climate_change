@@ -9,6 +9,8 @@ rm(list = ls(all = TRUE))
 library(ggplot2)
 library(plyr)
 library(merTools)
+library(doParallel)
+
 # function preparation données futures
 source("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/climate_change/11_fun_model.r")
 
@@ -20,8 +22,8 @@ new <- function(data = data){
   data$prop_PET_BA <- data$prop_PET_BA
   data$prop_SAB_BA <- data$prop_SAB_BA
   data$BAtot_CM2HA <- data$BAtot_CM2HA
-  data$drainage <- data$drainage # as.factor(2)
-  data$texture <- data$texture # as.factor(3)
+  data$texture <- as.factor(1) #data$texture
+  data$drainage <- as.factor(2) # data$drainage
   data$compethard <- data$compethard
   data$competsoft <- data$competsoft
   return(data)
@@ -77,7 +79,7 @@ pred_mod <- function(s = c("SAB", "PET")){
 
   # save
   setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output")
-  save(predictions, file = paste("QC_BAI_", s, ".rdata", sep = ""))
+  save(predictions, file = paste("QC_BAI_", s, "_T1D2", ".rdata", sep = "")) # change name according to T and D
   setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input/futur_climate/all_climate_data")
 
 }

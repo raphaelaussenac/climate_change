@@ -8,10 +8,10 @@ library(reshape2)
 # Data
 ####################################################
 # import and merge predictions
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/QC_BAI_PET.rdata")
+load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/QC_BAI_PETT2D1.rdata")
 PET <- predictions
 PET$sp <- "PET"
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/QC_BAI_SAB.rdata")
+load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/QC_BAI_SABT2D1.rdata")
 SAB <- predictions
 SAB$sp <- "SAB"
 data <- rbind(PET, SAB)
