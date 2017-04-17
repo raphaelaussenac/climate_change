@@ -68,48 +68,8 @@ allinone <- function(PET = PET, SAB = SAB, soil = soil){
   # plot
   ################
 
-  if (soil == "T0D0"){
-    ggplot(data = chronoplot)+
-    geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-    geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-    xlab("year")+
-    ylab("total BAI")+
-    facet_wrap(~ plot, nrow = 1, scales="free_y",  labeller = as_labeller(c("all" = "a) all stands", "MIX" = "b) mixed stands", "PET" = "c) pure aspen stands", "SAB" = "d) pure fir stands")))+
-    theme_bw()+
-    theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
-    ggsave (paste("~/Desktop/chap3/plot/plot", soil, ".pdf", sep = ""), width = 8, height= 5)
-  } else {
-    save(chronoplot, file = paste("chornoplot", soil, ".rdata", sep = ""))
-  }
-
-  # ####################################################
-  # # difference between Mixed and PET
-  # ####################################################
-  #
-  # # difference between
-  # diff <- dcast(pred[pred$plot %in% c("MIX", "PET"),], yr + rcp + mod + sim ~ plot)
-  # diff$BAI <- diff$MIX - diff$PET
-  # diff$plot <- "diff"
-  #
-  # ################
-  # # min, max, CI
-  # ################
-  # diff <- minmax(diff, "diff")
-  # diffplot <- diff
-  #
-  # ################
-  # # plot
-  # ################
-  #
-  # ggplot(data = diff)+
-  # geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-  # geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-  # xlab("year")+
-  # ylab("total BAI of mixed stands - total BAI of pure aspen stands")+
-  # theme_bw()+
-  # theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
-  #
-  # # ggsave (paste("~/Desktop/chap3/plot/diffplot", soil, ".pdf", sep = ""), width = 4, height= 5)
+  chronoplot$soil <- soil
+  save(chronoplot, file = paste("chronoplot", soil, ".rdata", sep = ""))
 
   ####################################################
   # Plot SP chronology over the 1950-2100 period
@@ -150,17 +110,8 @@ allinone <- function(PET = PET, SAB = SAB, soil = soil){
   chronosp[chronosp$ESSENCE == "SAB" & chronosp$plot == "MIX", "a"] <- "c) fir in mixed stands"
   chronosp[chronosp$ESSENCE == "SAB" & chronosp$plot == "SAB", "a"] <- "d) fir in pure stands"
 
-  ggplot(data = chronosp)+
-  geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-  geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-  xlab("year")+
-  ylab("total BAI")+
-  # facet_wrap(sp ~ plot, scales="free_y", labeller = as_labeller(c("PET" = "a) aspen", "mix" = "in mixed stands", "mono" = "in pure stands", "SAB" = "b) fir")))+
-  facet_wrap(~ a, nrow = 1, scales="free_y")+
-  theme_bw()+
-  theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
-
-  ggsave (paste("~/Desktop/chap3/plot/sp", soil, ".pdf", sep = ""), width = 8, height= 5)
+  chronosp$soil <- soil
+  save(chronosp, file = paste("chronosp", soil, ".rdata", sep = ""))
 
   ####################################################
   # difference between Mixed and pure
@@ -218,27 +169,3 @@ for (i in 1:length(PETs)){
   soil <- substr(PETs[i], 12, 15)
   allinone(PET = PET, SAB = SAB, soil = soil)
 }
-
-
-####################################################
-# Differences between mixed and pure
-####################################################
-
-# File list
-diffs <- Sys.glob("diff*")
-
-load("diffT0D0.rdata")
-
-# 1 on empile tout puis on plot en facet
-
-
-ggplot(data = diff)+
-geom_ribbon(aes(x=yr, ymax=BAImax, ymin=BAImin, fill = rcp), alpha = 0.2)+
-geom_ribbon(aes(x=yr, ymax=CImax, ymin=CImin, fill = rcp), alpha = 0.5)+
-facet_grid(soil ~ plot)
-xlab("year")+
-ylab("total BAI of aspen in mixed stands - in pure aspen stands")+
-theme_bw()+
-theme(strip.background = element_rect(colour = "white", fill = "white"), legend.position = "bottom", legend.title = element_blank())
-
-# # ggsave (paste("~/Desktop/chap3/plot/diffsp", soil, ".pdf", sep = ""), width = 4, height= 5)
