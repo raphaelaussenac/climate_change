@@ -7,11 +7,14 @@ options(digits=22)
 ####################################################
 library(plyr) # pour la fonction "ddply"
 
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # Import selected plots (file "mixedsites")
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/mixedsites.rdata")
+load("./mixedsites.rdata")
 
 # Import tree ring data
-cores <- read.table("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/chron_row_data/T_CernesSABPET.txt", sep=";", header=T)
+cores <- read.table("./T_CernesSABPET.txt", sep=";", header=T)
 cores <- cores[, c("ID_PET_MES", "ID_ARB", "AN_CERNE", "LARG_CERNE", "ESSENCE", "DHP_MM")]
 
 
@@ -29,7 +32,7 @@ str(cores)
 cores <- cores[cores$ID_PET_MES %in% unique(mixedsites$ID_PET_MES),]
 
 # Import coordinates
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/merge_Loic.rdata")
+load("./merge_Loic.rdata")
 data <- data[,c("ID_PET_MES","LATITUDE","LONGITUDE","DEP_DR")]
 data <- data[data$ID_PET_MES %in% unique(mixedsites$ID_PET_MES),]
 
@@ -64,7 +67,7 @@ pure$Compo <- pure$ESSENCE
 mixed <- data[data$nbsp==2,]
 mixed$Compo <- "MIXED"
 data <- rbind(pure,mixed)
-save(data, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/data.rdata")
+save(data, file="./data.rdata")
 
 
 # sites coordinates for climate variables extraction
@@ -79,7 +82,7 @@ coord <- merge(coord,compo,by="ID_PET_MES")
 coord <- merge(coord,DD,by="ID_PET_MES")
 coord <- merge(coord,prop_SAB_BA,by="ID_PET_MES")
 coord <- merge(coord,prop_PET_BA,by="ID_PET_MES")
-save(coord, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/coord.rdata")
+save(coord, file="./coord.rdata")
 
 
 ####################################################

@@ -2,7 +2,7 @@
 ##                  Data & Packages               ##
 ####################################################
 # Choose the work directory = folder
-setwd("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input")
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change")
 
 # Load Package
 library(foreign) # pour ouvrir les ".dbf"
@@ -10,9 +10,9 @@ library(plyr) # pour la fonction "ddply"
 library(reshape2) # pour "tableau croisé dynamique"
 
 # Import data
-data1 <- read.dbf("TIGES3.DBF")
+data1 <- read.dbf("./data/TIGES3.DBF")
 # data1[,"ID_PET_MES"] <- as.character(data1[,"ID_PET_MES"])
-data2 <- read.dbf("TIGES4.DBF")
+data2 <- read.dbf("./data/TIGES4.DBF")
 # data2[,"ID_PET_MES"] <- as.character(data2[,"ID_PET_MES"])
 
 ####################################################
@@ -82,7 +82,7 @@ colnames(mixedsites)[colnames(mixedsites)=="BAtot"] <- "BAtot_CM2HA"
 ##                   save data                    ##
 ####################################################
 
-save(mixedsites, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/mixedsites.rdata")
+save(mixedsites, file = "./data/mixedsites.rdata")
 
 
 ####################################################
@@ -105,4 +105,4 @@ colnames(compet)[colnames(compet)=="ST_M2HA"] <- "ST_CM2HA"
 ##                   save data                    ##
 ####################################################
 
-save(compet, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/compet.rdata")
+save(compet, file="./data/compet.rdata")
