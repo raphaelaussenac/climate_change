@@ -6,13 +6,16 @@ rm(list=ls(all=TRUE))
 ####################################################
 library(plyr) # pour la fonction "ddply"
 
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # complete data
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/dataBAIcompet.rdata")
+load("./dataBAIcompet.rdata")
 range(nchar(data$ID_PET_MES))
 range(nchar(data$ID_ARB))
 
 # filtered cores
-cores <- read.csv("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input/UPAYS_filtre.csv", sep=";")
+cores <- read.csv("./UPAYS_filtre.csv", sep=";")
 range(nchar(cores$ID_PET_MES))
 range(nchar(cores$ID_ARB))
 # format ID_PET_MES
@@ -46,7 +49,7 @@ length(unique(data[data$ESSENCE=="PET", "ID_ARB"]))
 ## save
 ####################################################
 
-save(data, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAIcompetfilt.rdata")
+save(data, file="./dataBAIcompetfilt.rdata")
 
 
 ####################################################
@@ -57,7 +60,7 @@ sites <- data.frame(unique(data$ID_PET_MES))
 colnames(sites) <- "ID_PET_MES"
 sites$ID_PET_MES <- as.character(sites$ID_PET_MES)
 range(nchar(sites$ID_PET_MES))
-write.csv(sites, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/liste_sites.csv")
+write.csv(sites, file="./liste_sites.csv")
 
 
 

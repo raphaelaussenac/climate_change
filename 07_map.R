@@ -5,8 +5,12 @@ options(digits=16)
 ####################################################
 ##                  Data & Packages               ##
 ####################################################
+
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # sites list after filtering the cores
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAIcompetfilt.rdata")
+load("./dataBAIcompetfilt.rdata")
 coord <- data
 
 

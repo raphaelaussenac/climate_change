@@ -6,9 +6,13 @@ options(digits=16)
 ##                  Data & Packages               ##
 ####################################################
 library(plyr) # pour la fonction "ddply"
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/dataBAI.rdata")
 
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/compet.rdata")
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
+load("./dataBAI.rdata")
+
+load("./compet.rdata")
 
 
 ####################################################
@@ -55,7 +59,7 @@ hist(compet$competsoft)
 ####################################################
 
 data <- merge(data, compet[, c("ID_ARB", "compethard", "competsoft")], by="ID_ARB")
-save(data, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/dataBAIcompet.rdata")
+save(data, file="./dataBAIcompet.rdata")
 
 
 ####################################################
@@ -63,4 +67,4 @@ save(data, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/ou
 ####################################################
 
 sites <- ddply(data, .(ID_PET_MES, ID_ARB), summarise, SP=unique(ESSENCE))
-save(sites, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/sitescores.rdata")
+save(sites, file="./sitescores.rdata")

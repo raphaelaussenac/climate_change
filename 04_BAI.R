@@ -8,8 +8,11 @@ options(digits=16)
 library(ggplot2)
 library(plyr) # pour la fonction "ddply"
 
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # site
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/data.rdata")
+load("./data.rdata")
 
 ####################################################
 ## Data verification / transformation
@@ -22,7 +25,7 @@ geom_histogram(binwidth=1, fill="white", color="black")+
 geom_vline(xintercept=1985, color="red", linetype = "longdash")+
 geom_vline(xintercept=2005, color="red", linetype = "longdash")
 
-# tree ring range
+# tree ring width
 ggplot(data, aes(LARG_CERNE))+
 geom_histogram(binwidth=0.1)+
 geom_vline(xintercept=10, color="red", linetype = "longdash")
@@ -32,7 +35,7 @@ MAX <- ddply(data, .(ID_ARB), summarise, MAX=max(LARG_CERNE))
 MAX <- MAX[MAX$MAX<10,]
 data <- data[data$ID_ARB %in% MAX$ID_ARB,]
 
-# tree ring range
+# tree ring width
 ggplot(data, aes(LARG_CERNE))+
 geom_histogram(binwidth=0.1)
 
@@ -171,7 +174,16 @@ listok <- listok[duplicated(listok)]
 
 data <- data[data$ID_ARB %in% listok, ]
 
-save(data, file = "~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/dataBAI.rdata")
+save(data, file = "./dataBAI.rdata")
+
+
+
+
+
+
+
+
+
 
 ####################################################
 # BAI as a function of DBH
