@@ -13,9 +13,8 @@ setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
 load("./dataBAIcompetfilt.rdata")
 coord <- data
 
-
 # list of the sites selected on the basis of the BA of species
-load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/coord.rdata")
+load("./coord.rdata")
 
 
 ####################################################
@@ -23,9 +22,13 @@ load("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/output/coord.
 ####################################################
 # devtools::install_github("dkahle/ggmap")
 # devtools::install_github("hadley/ggplot2")
-require(ggmap)
-require(ggplot2)
-#
+library(ggmap)
+library(ggplot2)
+
+# Set your API Key (get API key on google cloud platform)
+source('/Users/raphaelaussenac/Documents/GitHub/climate_change/src/googleAPI.R')
+
+
 # library(rgdal)
 # reg  <- readOGR(dsn=".", layer="re05073g")   ### echelle sous-domaine (noms des shp)
 # reg@data$id <- rownames(reg@data)
@@ -33,26 +36,44 @@ require(ggplot2)
 # reg.df$id <- as.numeric(reg.df$id)
 
 ### centre de la carte
-lat <- c(44, 52)
-lon <- c(-80, -55)
+# lat <- c(44, 52)
+# lon <- c(-80, -55)
+
+borders <- c(bottom  = 45,
+                 top     = 51.2,
+                 left    = -79.7,
+                 right   = -64)
+
+                 #
+                 #
+                 # c("terrain",
+                 #        "terrain-background", "terrain-labels", "terrain-lines", "toner",
+                 #        "toner-2010", "toner-2011", "toner-background", "toner-hybrid",
+                 #        "toner-labels", "toner-lines", "toner-lite", "watercolor"),
+
+
+
 ### télécharger fond de carte chez google
-map <- get_map(location = c(lon = mean(lon), lat = mean(lat)), zoom = 5,
-maptype = "toner-background", source = "google")
+map <- get_stamenmap(borders, zoom = 7, maptype = "toner-lite")
+# map <- get_map(location = c(lon = mean(lon), lat = mean(lat)), zoom = 6,
+#                 maptype = "toner-background", source = "stamen")
+
 ### integrer fond de carte google dans ggplot
-bckgrd <- ggmap(map)+
-scale_x_continuous(limits = lon, expand = c(0, 0)) +
-scale_y_continuous(limits = lat, expand = c(0, 0))
+bckgrd <- ggmap(map)
+# bckgrd <- ggmap(map)+
+#   scale_x_continuous(limits = lon, expand = c(0, 0)) +
+#   scale_y_continuous(limits = lat, expand = c(0, 0))
 
 ### parametres carte
-theme=theme(panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(),
-strip.background = element_blank(),
-panel.background = element_rect(fill = 'white'),
-legend.position = c(1,0),
-legend.justification=c(1,0),
-text = element_text(size=12),
-axis.text.x = element_text(size=10),
-legend.key = element_blank())
+theme = theme(panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.background = element_blank(),
+  panel.background = element_rect(fill = 'white'),
+  legend.position = c(1,0),
+  legend.justification=c(1,0),
+  text = element_text(size=12),
+  axis.text.x = element_text(size=10),
+  legend.key = element_blank())
 
 ####################################################
 ##                        Map                     ##
