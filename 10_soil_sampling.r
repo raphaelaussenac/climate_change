@@ -11,8 +11,11 @@ library(plot3D)
 library(ggplot2)
 library(gridExtra)
 
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # growth data
-load(file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAI.rdata")
+load(file="./dataBAI.rdata")
 
 # number of sites
 length(unique(data$ID_PET_MES))
@@ -22,6 +25,7 @@ length(unique(data$ID_ARB))
 
 # DD
 DD <- ddply(data, .(ID_ARB, ESSENCE), summarise, DD=unique(DD))
+
 ggplot(data = DD)+
 geom_histogram(aes(x = DD, fill = ESSENCE), stat = "count")
 ggsave ("~/Desktop/DD.pdf")

@@ -7,8 +7,11 @@ rm(list=ls(all=TRUE))
 # Packages
 library(plyr) # pour la fonction "ddply"
 
+# Choose the work directory = folder
+setwd("/Users/raphaelaussenac/Documents/GitHub/climate_change/data")
+
 # clim data
-clim <- read.table("~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/input/Q1985-2005.txt", sep=";", header=T)
+clim <- read.table("./Q1985-2005.txt", sep=";", header=T)
 # format ID_PET_MES
 range(nchar(clim$ID))
 clim$ID <- formatC(clim$ID, width = 12, format = "fg", flag = "0")
@@ -16,7 +19,7 @@ range(nchar(clim$ID))
 clim$yr <- substr(clim$Date, 1, 4)
 
 # growth data
-load(file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAIcompetfilt.rdata")
+load(file="./dataBAIcompetfilt.rdata")
 
 
 ####################################################
@@ -52,4 +55,4 @@ data <- merge(data, Pperiod, by.x = "ID_PET_MES", by.y = "ID")
 ## save
 ####################################################
 
-save(data, file="~/owncloud/Work_directory/Analysis/chapitre_3/03_mixed_model/RUN_MODEL/dataBAIcompetfilt.rdata")
+save(data, file="./dataBAIcompetfilt.rdata")
