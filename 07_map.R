@@ -79,12 +79,27 @@ theme = theme(panel.grid.major = element_blank(),
 ##                        Map                     ##
 ####################################################
 # all sites
-bckgrd+
-geom_point(data=coord,aes(LONG,LAT, color=Compo),size=1, alpha=0.5)+
-theme_bw()+
-theme+
-xlab("longitude") + ylab("latitude")+
+bckgrd +
+geom_point(data=coord,aes(LONG,LAT, color=Compo),size=1, alpha=0.5) +
+theme_bw() +
+theme +
+xlab("longitude") + ylab("latitude") +
 ggtitle("All sites with at least one core of one of the species")
+
+
+
+
+
+
+bckgrd +
+geom_point(data = coord, aes(LONG, LAT, color = Compo), size = 1, alpha = 1) +
+theme_bw()
+ggsave ("~/Desktop/map.pdf", width = 9, height= 6)
+
+
+
+
+
 
 
 # all sites color: proportion SAB
